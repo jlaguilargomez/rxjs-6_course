@@ -52,14 +52,15 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.form.valueChanges
-      .pipe(
-        filter(() => this.form.valid),
-        concatMap(changes => this.saveCourse(changes))
-      )
-      .subscribe();
+    console.log(this.saveButton);
+    // this.form.valueChanges
+    //   .pipe(
+    //     filter(() => this.form.valid),
+    //     concatMap(changes => this.saveCourse(changes))
+    //   )
+    //   .subscribe();
 
-    const interval$ = interval(1000);
+    // const interval$ = interval(1000);
 
     // interval$
     //   .pipe(
@@ -73,7 +74,7 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
 
   saveCourse(changes) {
     return fromPromise(
-      fetch(changes, {
+      fetch(`/api/courses/${this.course.id}`, {
         method: 'PUT',
         body: JSON.stringify(changes),
         headers: {
@@ -83,7 +84,11 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     );
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() {
+    fromEvent(this.saveButton.nativeElement, 'click')
+      .pipe(exhaustMap(() => this.saveCourse(this.form.value)))
+      .subscribe(console.log);
+  }
 
   close() {
     this.dialogRef.close();

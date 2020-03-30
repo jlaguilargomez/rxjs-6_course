@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Course } from '../model/course';
-import { interval, Observable, of, timer, noop } from 'rxjs';
+import { interval, Observable, of, timer, noop, throwError } from 'rxjs';
 import {
   catchError,
   delayWhen,
@@ -8,6 +8,7 @@ import {
   retryWhen,
   shareReplay,
   tap,
+  finalize,
 } from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 
@@ -29,11 +30,35 @@ export class HomeComponent implements OnInit {
     const http$: Observable<Course[]> = createHttpObservable('/api/courses');
 
     const courses$ = http$.pipe(
+      catchError(
+        err => {
+          console.log('Error Ocurred', err);
+          return throwError(err);
+        }
+        // of([
+        //   {
+        //     id: 0,
+        //     description: 'RxJs In Practice Course',
+        //     iconUrl:
+        //       'https://s3-us-west-1.amazonaws.com/angular-university/course-images/rxjs-in-practice-course.png',
+        //     courseListIcon:
+        //       'https://angular-academy.s3.amazonaws.com/main-logo/main-page-logo-small-hat.png',
+        //     longDescription:
+        //       'Understand the RxJs Observable pattern, learn the RxJs Operators via practical examples',
+        //     category: 'BEGINNER',
+        //     lessonsCount: 10,
+        //   },
+        // ])
+      ),
+      finalize(() => {
+        console.log('Finalize exetuted');
+      }),
       tap(() => console.log('HTTP request executed')),
       map(res => Object.values(res['payload'])),
       // tslint:disable-next-line: max-line-length
       // OJO: si no lo entiendes, prueba a ejecutar el código sin el siguiente método y mira lo que devuelve por consola (se ejecutará dos veces)
-      shareReplay()
+      shareReplay(),
+      retryWhen(errors => errors.pipe(delayWhen(() => timer(2000))))
     );
 
     this.beginnerCourses$ = courses$.pipe(

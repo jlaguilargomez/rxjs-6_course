@@ -23,6 +23,7 @@ import {
 import { merge, fromEvent, Observable, concat, from } from 'rxjs';
 import { Lesson } from '../model/lesson';
 import { createHttpObservable } from '../common/util';
+import { debug, RxJsLogginLevel } from '../common/debug';
 
 @Component({
   selector: 'course',
@@ -51,6 +52,8 @@ export class CourseComponent implements OnInit, AfterViewInit {
       'keyup'
     ).pipe(
       map(event => event.target.value),
+      tap(console.log),
+      debug(RxJsLogginLevel.INFO, 'search'),
       debounceTime(400),
       distinctUntilChanged(),
       switchMap(search => this.loadLessons(search))

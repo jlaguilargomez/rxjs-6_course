@@ -1,4 +1,5 @@
 import { Observable } from 'rxjs';
+import { ObserveOnOperator } from 'rxjs/internal/operators/observeOn';
 
 export function createHttpObservable(url: string) {
   return Observable.create(observer => {
@@ -7,7 +8,11 @@ export function createHttpObservable(url: string) {
 
     fetch(url, { signal })
       .then(response => {
-        return response.json();
+        if (response.ok) {
+          return response.json();
+        } else {
+          observer.error('Request failid with status code: ' + response.status);
+        }
       })
       .then(body => {
         observer.next(body);
